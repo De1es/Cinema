@@ -1,7 +1,6 @@
 package by.itacademy.andrei_delesevich.cinema.service.movie;
 
 import by.itacademy.andrei_delesevich.cinema.dao.moviedao.MovieDao;
-import by.itacademy.andrei_delesevich.cinema.dao.moviedao.MovieDaoImpl;
 import by.itacademy.andrei_delesevich.cinema.exception.MovieDaoException;
 import by.itacademy.andrei_delesevich.cinema.model.movie.Movie;
 
@@ -11,7 +10,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MovieServiceImpl implements MovieService {
-    MovieDao md = new MovieDaoImpl();
+    MovieDao md = null;
+
+    public MovieServiceImpl(MovieDao md) {
+        this.md = md;
+    }
 
     @Override
     public List<Movie> getNextMovies() {

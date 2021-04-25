@@ -12,9 +12,11 @@ import java.util.List;
 import java.util.Scanner;
 
 public class MenuController implements Controller {
-    ServiceFacade sf = new ServiceFacade();
-    Scanner sc = new Scanner(System.in);
+    ServiceFacade sf = null;
 
+    public MenuController(ServiceFacade sf) {
+        this.sf = sf;
+    }
 
     @Override
     public void start() {
@@ -104,9 +106,9 @@ public class MenuController implements Controller {
         List<Movie> list = sf.movieService.getNextMovies();
         System.out.println("Будущие киносеансы:" + list.toString().substring(1, list.toString().length() - 1) + ".");
         System.out.println("Для покупки билета на киносеанс введите номер киносеанса," +
-                " для возврата в предыдущее меню введите 0.");
-        int movieId = -1;
-        while (movieId == -1) {
+                " для возврата в предыдущее меню введите 0:");
+        int movieId = 0;
+        while (movieId == 0) {
             Scanner sc = new Scanner(System.in);
             try {
                 int num = sc.nextInt();
@@ -114,14 +116,13 @@ public class MenuController implements Controller {
                     return;
                 }
 
-                for (Movie m : list
-                ) {
+                for (Movie m : list) {
                     if (m.getId() == num) {
                         movieId = num;
                         break;
                     }
                 }
-                if (movieId == -1) {
+                if (movieId == 0) {
                     System.out.println("Киносеанса с таким номером в списке нет, попробуйте еще раз");
                 }
             } catch (InputMismatchException e) {
@@ -137,29 +138,29 @@ public class MenuController implements Controller {
         } else {
             System.out.println("Цена билета: " + freePlaces.get(0).getPrice() + "\n");
             StringBuffer sb = new StringBuffer("Свободные места: ");
-            for (Ticket t : freePlaces
-            ) {
+            for (Ticket t : freePlaces) {
                 sb.append(t.getPlaceNumber()).append(" ");
             }
             System.out.println(sb);
-            System.out.println("Введите номер приобретаемого места:");
-            int place = -1;
+            System.out.println("Введите номер приобретаемого места," +
+                    "для возврата в предыдущее меню введите 0:");
+            int place = 0;
             int ticketId = 0;
-            while (place == -1) {
+            while (place == 0) {
                 Scanner sc = new Scanner(System.in);
                 try {
                     int num = sc.nextInt();
-                    if (num > 0) {
-                        for (Ticket t : freePlaces
-                        ) {
-                            if (t.getPlaceNumber() == num) {
-                                place = num;
-                                ticketId = t.getId();
-                                break;
-                            }
+                    if (num == 0) {
+                        return;
+                    }
+                    for (Ticket t : freePlaces) {
+                        if (t.getPlaceNumber() == num) {
+                            place = num;
+                            ticketId = t.getId();
+                            break;
                         }
                     }
-                    if (place == -1) {
+                    if (place == 0) {
                         System.out.println("Билета с таким номером в списке нет, попробуйте еще раз");
                     }
                 } catch (InputMismatchException e) {
@@ -176,8 +177,8 @@ public class MenuController implements Controller {
         System.out.println("Ваши купленные билеты:");
         List<Ticket> list = sf.ticketService.getUserTickets(user);
         System.out.println(list);
-        System.out.println("Для возврата одного из указанных билетов введите номер билета,\n" +
-                "для выхода в предыдущее меню введите 0");
+        System.out.println("Для возврата одного из указанных билетов введите номер билета," +
+                "для возврата в предыдущее меню введите 0:");
         int choice = 0;
 
         while (choice == 0) {
@@ -245,11 +246,12 @@ public class MenuController implements Controller {
     }
 
     void movieCreateMenu() {
+        Scanner sc = new Scanner(System.in);
         String title = "";
         while (title.equals("")) {
-            Scanner sc = new Scanner(System.in);
+            Scanner sc1 = new Scanner(System.in);
             System.out.println("Введите название фильма:");
-            title = sc.nextLine();
+            title = sc1.nextLine();
             if (title.trim().length() < 3) {
                 System.out.println("Название фильма должно содержать больше 3 символов,");
                 title = "";
@@ -268,9 +270,9 @@ public class MenuController implements Controller {
         System.out.println("Введите количество билетов на сеанс (1-10):");
         int placeCapacity = -1;
         while (placeCapacity == -1) {
-            Scanner sc = new Scanner(System.in);
+            Scanner sc1 = new Scanner(System.in);
             try {
-                int num = sc.nextInt();
+                int num = sc1.nextInt();
                 if (num > 0 && num <= 10) {
                     placeCapacity = num;
                 } else System.out.println("Число должно быть от 1 до 10, попробуйте еще раз");
@@ -281,9 +283,9 @@ public class MenuController implements Controller {
         System.out.println("Введите стоимость билета на сеанс");
         int ticketPrice = -1;
         while (ticketPrice == -1) {
-            Scanner sc = new Scanner(System.in);
+            Scanner sc1 = new Scanner(System.in);
             try {
-                int num = sc.nextInt();
+                int num = sc1.nextInt();
                 if (num > 0) {
                     ticketPrice = num;
                 } else System.out.println("Число должно быть положительным, попробуйте еще раз");
@@ -311,12 +313,16 @@ public class MenuController implements Controller {
         System.out.println("Все будущие киносеансы: ");
         List<Movie> moviesList = sf.movieService.getNextMovies();
         System.out.println(moviesList.toString());
-        System.out.println("Введите номер киносеанса для его изменения, либо 0 для возврата в предыдущее меню");
+        System.out.println("Введите номер киносеанса для его изменения," +
+                "для возврата в предыдущее меню введите 0:");
         int movieId = 0;
         while (movieId == 0) {
             Scanner sc = new Scanner(System.in);
             try {
                 int n = sc.nextInt();
+                if (n == 0) {
+                    return;
+                }
                 for (Movie m : moviesList
                 ) {
                     if (m.getId() == n) {
@@ -358,7 +364,7 @@ public class MenuController implements Controller {
     }
 
     void userTicketGetBackMenu() {
-        System.out.println("Введите логин пользователя, билет которого хотите вернуть:");
+        System.out.println("Введите логин пользователя, билет которого хотите вернуть, :");
         int n = 0;
         Scanner sc = new Scanner(System.in);
         List<Ticket> list = null;
@@ -384,8 +390,7 @@ public class MenuController implements Controller {
             } catch (InputMismatchException e) {
                 System.err.println("Команда должна быть числом");
             }
-            for (Ticket t : list
-            ) {
+            for (Ticket t : list) {
                 if (num == t.getId()) {
                     ticketId = num;
                     break;
@@ -401,16 +406,15 @@ public class MenuController implements Controller {
     }
 
     void userTicketBuyMenu() {
-        System.out.println("Введите логин пользователя, билет которому хотите купить, или 0, чтобы" +
-                " выйти в предыдущее меню:");
+        System.out.println("Введите логин пользователя, билет которому хотите купить," +
+                " для возврата в предыдущее меню введите 0:");
         Scanner sc = new Scanner(System.in);
-        int n = 0;
         String name = "";
-        while (n == 0) {
-            name = "";
+
+        while (true) {
             name = sc.next();
             if (name.equals("0")) {
-                n++;
+                return;
             }
             User user = sf.userService.userRead(name);
             if (user == null) {
@@ -419,7 +423,7 @@ public class MenuController implements Controller {
             } else if (user.getAccess() != UserAccessLevel.USER) {
                 System.out.println("Билеты можно покупать только пользователям, попробуйте еще раз");
             } else {
-                n++;
+                break;
 
             }
         }
@@ -490,23 +494,22 @@ public class MenuController implements Controller {
         List<Movie> list = sf.movieService.getNextMovies();
         System.out.println("Все будущие киносеансы: ");
         System.out.println(list.toString());
-        int deleteNum = -1;
-        while (deleteNum == -1) {
+        int deleteNum = 0;
+        while (deleteNum == 0) {
             Scanner sc1 = new Scanner(System.in);
             try {
                 int num = sc1.nextInt();
-                if (num >= 0) {
-                    if (num == 0) {
+
+                if (num == 0) {
+                    return;
+                }
+                for (Movie m : list) {
+                    if (m.getId() == num) {
+                        deleteNum = num;
                         break;
                     }
-                    for (Movie m : list
-                    ) {
-                        if (m.getId() == num) {
-                            deleteNum = num;
-                        }
-                    }
                 }
-                if (deleteNum > 0) {
+                if (deleteNum != 0) {
                     if (sf.movieService.movieDelete(deleteNum)) {
                         sf.ticketService.deleteTicketsOnMovie(deleteNum);
                         System.out.println("Киносеанс №" + deleteNum + " удален");

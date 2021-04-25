@@ -1,17 +1,19 @@
 package by.itacademy.andrei_delesevich.cinema.service.ticket;
 
 import by.itacademy.andrei_delesevich.cinema.dao.ticketdao.TicketDao;
-import by.itacademy.andrei_delesevich.cinema.dao.ticketdao.TicketDaoImpl;
 import by.itacademy.andrei_delesevich.cinema.exception.TicketDaoException;
 import by.itacademy.andrei_delesevich.cinema.model.ticket.Ticket;
-import by.itacademy.andrei_delesevich.cinema.model.user.User;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class TicketServiceImpl implements TicketService {
 
-    TicketDao td = new TicketDaoImpl();
+    TicketDao td = null;
+
+    public TicketServiceImpl(TicketDao td) {
+        this.td = td;
+    }
 
     @Override
     public List<Ticket> getFreePlaces(int movieId) {

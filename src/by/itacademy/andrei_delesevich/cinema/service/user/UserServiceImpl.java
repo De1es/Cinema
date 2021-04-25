@@ -1,7 +1,6 @@
 package by.itacademy.andrei_delesevich.cinema.service.user;
 
 import by.itacademy.andrei_delesevich.cinema.dao.userdao.UserDao;
-import by.itacademy.andrei_delesevich.cinema.dao.userdao.UserDaoImpl;
 import by.itacademy.andrei_delesevich.cinema.exception.UserDaoException;
 import by.itacademy.andrei_delesevich.cinema.model.user.User;
 import by.itacademy.andrei_delesevich.cinema.model.user.UserAccessLevel;
@@ -11,7 +10,11 @@ import static by.itacademy.andrei_delesevich.cinema.service.HashFunction.md5Cust
 
 
 public class UserServiceImpl implements UserService {
-    UserDao userDao = new UserDaoImpl();
+    UserDao userDao = null;
+
+    public UserServiceImpl(UserDao userDao) {
+        this.userDao = userDao;
+    }
 
     @Override
     public User userLogin(UserEntry userEntry) {

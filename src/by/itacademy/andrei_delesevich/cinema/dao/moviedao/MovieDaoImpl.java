@@ -4,9 +4,7 @@ import by.itacademy.andrei_delesevich.cinema.connection.AbstractConnection;
 import by.itacademy.andrei_delesevich.cinema.exception.MovieDaoException;
 import by.itacademy.andrei_delesevich.cinema.model.movie.Movie;
 
-import java.net.ConnectException;
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
