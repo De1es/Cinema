@@ -21,37 +21,39 @@ public class MenuController implements Controller {
     @Override
     public void start() {
         System.out.println("Добро пожаловать в систему продажи билетов нашего кинотеатра!");
-        int k = 0;
-        while (k == 0) {
+        while (true) {
             System.out.println("\nВведите: \n" +
                     "1 - для входа в систему,\n" +
                     "2 - для регистрации,\n" +
                     "0 - для выхода.");
             Scanner sc = new Scanner(System.in);
-            String choice1;
-            choice1 = sc.nextLine();
-            switch (choice1) {
+            String choice;
+            choice = sc.nextLine();
+            switch (choice) {
                 case "1":
                     System.out.println("Введите логин:");
                     String login = sc.next();
                     System.out.println("Введите пароль:");
                     String password = sc.next();
                     User user = sf.userService.userLogin(new UserEntry(login, password));
+
                     if (user == null) {
                         System.err.println("\nОшибка входа, такого логина не существует, либо неверный пароль");
-                    } else {
-                        switch (user.getAccess()) {
-                            case USER:
-                                userMenu(user);
-                                break;
-                            case MANAGER:
-                                managerMenu(user);
-                                break;
-                            case ADMIN:
-                                adminMenu(user);
-                                break;
-                        }
+                        break;
                     }
+
+                    switch (user.getAccess()) {
+                        case USER:
+                            userMenu(user);
+                            break;
+                        case MANAGER:
+                            managerMenu(user);
+                            break;
+                        case ADMIN:
+                            adminMenu(user);
+                            break;
+                    }
+
                     break;
                 case "2":
                     System.out.println("Введите логин:");
@@ -66,8 +68,7 @@ public class MenuController implements Controller {
                     break;
                 case "0":
                     System.out.println("До свидания, ждем Вас снова!");
-                    k++;
-                    break;
+                    return;
                 default:
                     System.out.println("Команда введена неверно, пожалуйста, попробуйте еще раз");
             }
@@ -293,10 +294,9 @@ public class MenuController implements Controller {
                 System.out.println("Количество билетов должно быть числом");
             }
         }
-        Movie movie = null;
-        if (sf.movieService.movieCreate(new Movie(title, date[0], date[1], date[2], time[0], time[1]))) {
+        Movie movie = sf.movieService.movieCreate(new Movie(title, date[0], date[1], date[2], time[0], time[1]));
+        if (movie != null) {
             System.out.println("Киносеанс создан");
-            movie = sf.movieService.getMovie(title, date[0], date[1], date[2], time[0], time[1]);
         }
 
 
@@ -525,21 +525,26 @@ public class MenuController implements Controller {
         Scanner sc = new Scanner(System.in);
         System.out.println("Введите логин редактируемого пользователя");
         String login = sc.next();
-        User user1 = sf.userService.userRead(login);
-        if (user1 == null) {
+        User user = sf.userService.userRead(login);
+
+        if (user == null) {
             System.out.println("Пользователь с таким логином не зарегистрирован");
-        } else if (user1.getAccess() != UserAccessLevel.USER) {
+
+        } else if (user.getAccess() != UserAccessLevel.USER) {
             System.out.println("Редактировать менеджера или админа нельзя");
+
         } else {
             System.out.println("Введите новый логин пользователя");
             String newLogin = sc.next();
             System.out.println("Введите новый пароль пользователя");
             String pass = sc.next();
+
             if (sf.userService.userUpdate(login, new User(newLogin, pass, UserAccessLevel.USER))) {
                 System.out.println("Пользователь " + login + " изменен");
             }
-            ;
+
         }
+
     }
 
     private void userDeleteMenu() {
@@ -551,6 +556,5 @@ public class MenuController implements Controller {
             System.out.println("Пользователь " + userDelete.getLogin() + " удален");
         } else System.out.println("Пользователь с таким логином не зарегистрирован," +
                 " либо это менеджер или админ");
-        return;
     }
 }

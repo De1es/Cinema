@@ -55,12 +55,13 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public boolean movieCreate(Movie movie) {
+    public Movie movieCreate(Movie movie) {
         try {
-            return md.createMovie(movie);
+            md.createMovie(movie);
+            return movie;
         } catch (MovieDaoException e) {
             System.out.println(e.getMessage());
-            return false;
+            return null;
         }
     }
 

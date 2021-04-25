@@ -20,13 +20,10 @@ public class UserServiceImpl implements UserService {
     public User userLogin(UserEntry userEntry) {
         passHash(userEntry);
         User user = userDao.readUser(userEntry.getName());
-        if (user!=null){
-            if (userDao.getUserPass(userEntry.getName()).equals(userEntry.getPassword())) {
-                return user;
-            } else {
-                return null;
-            }
-        } else  return null;
+        if (user != null && userDao.getUserPass(userEntry.getName()).equals(userEntry.getPassword())) {
+            return user;
+        }
+        return null;
     }
 
     @Override
@@ -34,7 +31,7 @@ public class UserServiceImpl implements UserService {
         passHash(userEntry);
         User user = new User(userEntry.getName(), userEntry.getPassword(), UserAccessLevel.USER);
         try {
-            return (userDao.createUser(user)!=null);
+            return (userDao.createUser(user) != null);
         } catch (UserDaoException e) {
             System.err.println("\nОшибка регистрации (создания) пользователя");
             return false;
@@ -49,35 +46,38 @@ public class UserServiceImpl implements UserService {
     @Override
     public User userDelete(String userLogin) {
         User user = userDao.readUser(userLogin);
-        if (user!=null) {
-            if (user.getAccess() == UserAccessLevel.ADMIN || user.getAccess() == UserAccessLevel.MANAGER) {
-                return null;
-            } else {
-                if (userDao.deleteUser(userLogin)) {
-                    return user;
-                } else {
-                    return null;
-                }
-            }
-        } else return null;
+        if (user == null) {
+            return null;
+        }
+
+        if (user.getAccess() == UserAccessLevel.ADMIN || user.getAccess() == UserAccessLevel.MANAGER) {
+            return null;
+        }
+
+        if (!userDao.deleteUser(userLogin)) {
+            return null;
+        }
+
+        return user;
+
     }
 
     @Override
     public boolean userUpdate(String userLogin, User newUser) {
         User user = userDao.readUser(userLogin);
-        if (user!=null) {
+        if (user != null) {
             newUser.setPassword(md5Custom(newUser.getPassword()));
             if (user.getAccess() == UserAccessLevel.ADMIN || user.getAccess() == UserAccessLevel.MANAGER) {
                 return false;
             } else {
-                try{
+                try {
                     return userDao.updateUser(userLogin, newUser);
-                }catch (UserDaoException e){
+                } catch (UserDaoException e) {
                     System.out.println(e.getMessage());
                     return false;
                 }
             }
-        }else return false;
+        } else return false;
     }
 
     @Override

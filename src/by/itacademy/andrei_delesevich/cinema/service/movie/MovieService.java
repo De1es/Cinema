@@ -11,7 +11,7 @@ public interface MovieService {
 
     public boolean movieDelete(int movieId);
 
-    public boolean movieCreate (Movie movie);
+    public Movie movieCreate (Movie movie);
 
     Movie getMovie (String title, String year, String month, String day, String hour, String minute);
 
