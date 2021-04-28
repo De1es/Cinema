@@ -18,10 +18,13 @@ import by.itacademy.andrei_delesevich.cinema.service.user.UserServiceImpl;
 
 
 
+
 /*
-    Аккаунт админа   login admin   pass admin
+    Аккаунт админа   login admin pass admin
 
     Аккаунт менеджера  login manager pass manager
+
+    Аккаунт пользователя login user pass user
 
  */
 
@@ -42,10 +45,5 @@ public class Main {
 
         menu.start();
 
-
-//        log4j скачать jar
-
-
-        // ошибки из дао слать в сервис и там посылать в лог , и юзеру сообщение
         }
 }

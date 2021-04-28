@@ -1,12 +1,16 @@
 package by.itacademy.andrei_delesevich.cinema.model.user;
 
+import java.io.IOException;
 import java.util.Objects;
+import java.util.logging.*;
 
 public class User {
-private int id;
-private String login;
-private String password;
-private UserAccessLevel access;
+    private int id;
+    private String login;
+    private String password;
+    private UserAccessLevel access;
+    private static final Logger logger = Logger.getLogger(User.class.getName());
+
 
     public User(String login, String password, UserAccessLevel access) {
         this.login = login;
@@ -19,12 +23,14 @@ private UserAccessLevel access;
         this.login = login;
         this.password = password;
         this.access = access;
+
     }
 
     public User(int id, String login, UserAccessLevel access) {
         this.id = id;
         this.login = login;
         this.access = access;
+
     }
 
     public int getId() {
@@ -81,4 +87,45 @@ private UserAccessLevel access;
     public int hashCode() {
         return Objects.hash(id, login, password, access);
     }
+
+
+    public void setLogger() {
+        logger.setUseParentHandlers(false);
+        Handler fileHandler = null;
+        try {
+            fileHandler = new FileHandler("logs/" + getLogin() + ".txt", true);
+            fileHandler.setFormatter(new UserLogFormatter());
+        } catch (IOException ignored) {
+        }
+        if (fileHandler != null) {
+            logger.addHandler(fileHandler);
+        }
+    }
+
+    public void log(String message) {
+        logger.info(message + "\n");
+    }
+
+    public static void log(Throwable e) {
+        logger.log(Level.SEVERE, "Exception: ", e);
+    }
+
+    public static void logClose() {
+        for (Handler h : logger.getHandlers()) {
+            h.close();
+        }
+    }
+
+
 }
+
+class UserLogFormatter extends Formatter {
+    @Override
+    public String format(LogRecord record) {
+        return record.getMessage();
+    }
+}
+
+
+
+

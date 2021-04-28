@@ -35,14 +35,12 @@ public class UserDaoImpl implements UserDao {
                 }else return null;
             } else return null;
         } catch (SQLException e) {
-            System.err.println("Ошибка создания пользователя");
-            return null;
+            throw new UserDaoException("Ошибка создания пользователя", e);
         }
-
     }
 
     @Override
-    public User readUser(String login) {
+    public User readUser(String login) throws UserDaoException {
         User user = null;
         try (Connection con = AbstractConnection.getConnection()) {
             if (con != null) {
@@ -55,7 +53,6 @@ public class UserDaoImpl implements UserDao {
                 int id;
                 String acc;
 
-
                 while (rs.next()) {
                     log = rs.getString("login");
                     id = rs.getInt("id");
@@ -66,8 +63,7 @@ public class UserDaoImpl implements UserDao {
             }
             return null;
         } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            return user;
+            throw new UserDaoException("Ошибка чтения пользователя", throwables);
         }
     }
 
@@ -88,7 +84,7 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public boolean deleteUser(String login) {
+    public boolean deleteUser(String login) throws UserDaoException {
         try (Connection con = AbstractConnection.getConnection()) {
             PreparedStatement stmt = con.prepareStatement("DELETE FROM users WHERE login =?");
             stmt.setString(1, login);
@@ -96,14 +92,13 @@ public class UserDaoImpl implements UserDao {
             return stmt.executeUpdate() > 0;
 
         } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            return false;
+            throw new UserDaoException("Ошибка удаления пользователя", throwables);
         }
     }
 
 
     @Override
-    public List<User> getAllUsers() {
+    public List<User> getAllUsers() throws UserDaoException {
         ArrayList<User> list = new ArrayList<>();
         try (Connection con = AbstractConnection.getConnection()) {
             PreparedStatement stmt = con.prepareStatement("SELECT * FROM users");
@@ -125,13 +120,12 @@ public class UserDaoImpl implements UserDao {
             return list;
 
         } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            return list;
+            throw new UserDaoException("Ошибка получения всех пользователей", throwables);
         }
     }
 
     @Override
-    public String getUserPass(String userLogin) {
+    public String getUserPass(String userLogin) throws UserDaoException {
         String pass = "";
         try (Connection con = AbstractConnection.getConnection()) {
             if (con != null) {
@@ -146,8 +140,7 @@ public class UserDaoImpl implements UserDao {
             return pass;
 
         } catch (SQLException throwables) {
-            System.err.println("Ошибка чтения праоля");
-            return pass;
+            throw new UserDaoException("Ошибка чтения праоля", throwables);
         }
     }
 }

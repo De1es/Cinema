@@ -3,6 +3,7 @@ package by.itacademy.andrei_delesevich.cinema.service.ticket;
 import by.itacademy.andrei_delesevich.cinema.dao.ticketdao.TicketDao;
 import by.itacademy.andrei_delesevich.cinema.exception.TicketDaoException;
 import by.itacademy.andrei_delesevich.cinema.model.ticket.Ticket;
+import by.itacademy.andrei_delesevich.cinema.model.user.User;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,10 +20,11 @@ public class TicketServiceImpl implements TicketService {
     public List<Ticket> getFreePlaces(int movieId) {
         try {
             List<Ticket> list = td.getMovieTickets(movieId);
-            list = list.stream().filter(n-> !n.isSold()).collect(Collectors.toList());
+            list = list.stream().filter(n -> !n.isSold()).collect(Collectors.toList());
             return list;
         } catch (TicketDaoException e) {
             System.out.println("Ошибка получения свободных мест");
+            User.log(e);
             return null;
         }
     }
@@ -39,6 +41,7 @@ public class TicketServiceImpl implements TicketService {
             } else return false;
         } catch (TicketDaoException e) {
             System.out.println("Ошибка покупки билета");
+            User.log(e);
             return false;
         }
     }
@@ -49,6 +52,7 @@ public class TicketServiceImpl implements TicketService {
             return td.getUserTickets(user);
         } catch (TicketDaoException e) {
             System.out.println("Ошибка получения билетов пользователя");
+            User.log(e);
             return null;
         }
     }
@@ -65,6 +69,7 @@ public class TicketServiceImpl implements TicketService {
             } else return false;
         } catch (TicketDaoException e) {
             System.out.println("Ошибка возврата билета");
+            User.log(e);
             return false;
         }
     }
@@ -76,6 +81,7 @@ public class TicketServiceImpl implements TicketService {
                 td.createTicket(new Ticket(title, i + 1, ticketPrice, false), movieId);
             } catch (TicketDaoException e) {
                 System.out.println(e.getMessage());
+                User.log(e);
                 return false;
             }
         }
@@ -88,6 +94,7 @@ public class TicketServiceImpl implements TicketService {
             return td.readTicket(ticketId);
         } catch (TicketDaoException e) {
             System.out.println(e.getMessage());
+            User.log(e);
             return null;
         }
     }
@@ -107,8 +114,28 @@ public class TicketServiceImpl implements TicketService {
             } else return false;
         } catch (TicketDaoException e) {
             System.out.println("Ошибка получения списка билетов");
+            User.log(e);
             return false;
         }
+    }
 
+    @Override
+    public boolean changeTicketsUser(String oldUserLogin, String newUserLogin) {
+        try {
+            List<Ticket> list = td.getUserTickets(oldUserLogin);
+            if (list != null) {
+                for (Ticket t : list) {
+                    Ticket ticket = new Ticket(t.getId(), newUserLogin, t.getMovie(),
+                            t.getPlaceNumber(), t.getPrice(), t.isSold());
+                    td.updateTicket(t.getId(), ticket);
+                }
+                return true;
+            }
+            return false;
+        } catch (TicketDaoException e) {
+            System.out.println("Ошибка изменения имени пользователя в билетах");
+            User.log(e);
+            return false;
+        }
     }
 }

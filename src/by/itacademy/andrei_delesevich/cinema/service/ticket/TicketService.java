@@ -1,7 +1,6 @@
 package by.itacademy.andrei_delesevich.cinema.service.ticket;
 
 import by.itacademy.andrei_delesevich.cinema.model.ticket.Ticket;
-import by.itacademy.andrei_delesevich.cinema.model.user.User;
 
 import java.util.List;
 
@@ -19,4 +18,6 @@ public interface TicketService {
     Ticket readTicket(int ticketId);
 
     boolean deleteTicketsOnMovie (int movieId);
+
+    boolean changeTicketsUser (String oldUserLogin, String newUserLogin);
 }

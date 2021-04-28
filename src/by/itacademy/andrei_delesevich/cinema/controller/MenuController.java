@@ -7,6 +7,7 @@ import by.itacademy.andrei_delesevich.cinema.model.user.UserAccessLevel;
 import by.itacademy.andrei_delesevich.cinema.model.user.UserEntry;
 import by.itacademy.andrei_delesevich.cinema.service.ServiceFacade;
 
+import java.time.LocalDateTime;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
@@ -30,7 +31,7 @@ public class MenuController implements Controller {
             String choice;
             choice = sc.nextLine();
             switch (choice) {
-                case "1":
+                case "1":   // вход в систему
                     System.out.println("Введите логин:");
                     String login = sc.next();
                     System.out.println("Введите пароль:");
@@ -41,7 +42,6 @@ public class MenuController implements Controller {
                         System.err.println("\nОшибка входа, такого логина не существует, либо неверный пароль");
                         break;
                     }
-
                     switch (user.getAccess()) {
                         case USER:
                             userMenu(user);
@@ -53,9 +53,8 @@ public class MenuController implements Controller {
                             adminMenu(user);
                             break;
                     }
-
                     break;
-                case "2":
+                case "2":   // регистрация в системе
                     System.out.println("Введите логин:");
                     String loginReg = sc.next();
                     System.out.println("Введите пароль:");
@@ -78,6 +77,9 @@ public class MenuController implements Controller {
     @Override
     public void userMenu(User user) {
         System.out.println("Пользователь " + user.getLogin() + ", добро пожаловть!");
+        user.setLogger();
+        user.log("Пользователь " + user.getLogin() + " вошел в приложение\nДата и время входа: " + LocalDateTime.now());
+        user.log("Открыто главное меню пользователя");
         int n = 1;
         while (n != 0) {
             Scanner sc = new Scanner(System.in);
@@ -85,17 +87,19 @@ public class MenuController implements Controller {
                     "1 - для просмотра киносеансов и покупки билетов на них,\n" +
                     "2 - для просмотра купленных билетов, и при желании возврата,\n" +
                     "0 - для выхода из учетной записи");
-
             String choice = sc.next();
             switch (choice) {
-                case "1":
-                    movieChoiceMenu(user);  // меню выбора кино и покупки на него билета
+                case "1":  // просмотр киносеансов и покупка юилетов на них
+                    movieChoiceMenu(user);
                     break;
                 case "2":
-                    viewUserTickets(user.getLogin());  // меню просмотра купленных билетов и возврата
+                    viewUserTickets(user);  // меню просмотра купленных билетов и возврата
                     break;
                 case "0":
                     n = 0;
+                    System.out.println("До свидания! Будем рады видеть Вас снова!");
+                    user.log("Пользователь " + user.getLogin() + " вышел из учетной записи");
+                    User.logClose();
                     break;
                 default:
                     System.err.println("Команда введена неверно! Пожалуйста, попробуйте еще раз!");
@@ -104,6 +108,7 @@ public class MenuController implements Controller {
     }
 
     void movieChoiceMenu(User user) {
+        user.log("Открыто меню выбора фильма.");
         List<Movie> list = sf.movieService.getNextMovies();
         System.out.println("Будущие киносеансы:" + list.toString().substring(1, list.toString().length() - 1) + ".");
         System.out.println("Для покупки билета на киносеанс введите номер киносеанса," +
@@ -114,12 +119,13 @@ public class MenuController implements Controller {
             try {
                 int num = sc.nextInt();
                 if (num == 0) {
+                    user.log("Закрыто меню просмотра киносеансов без выбора фильма");
                     return;
                 }
-
                 for (Movie m : list) {
                     if (m.getId() == num) {
                         movieId = num;
+                        user.log("Выбран киносеанс № " + movieId);
                         break;
                     }
                 }
@@ -130,10 +136,8 @@ public class MenuController implements Controller {
                 System.err.println("Команда должна быть числом");
             }
         }
-
-
         List<Ticket> freePlaces = sf.ticketService.getFreePlaces(movieId);
-        if (freePlaces == null) {
+        if (freePlaces == null || freePlaces.size()==0) {
             System.out.println("Свободных мест на данный киносеанс нет, " +
                     "пожалуйста, выберите другой киносеанс");
         } else {
@@ -152,12 +156,14 @@ public class MenuController implements Controller {
                 try {
                     int num = sc.nextInt();
                     if (num == 0) {
+                        user.log("Закрыто меню выбора фильма на стадии выбора билета, без покупки билета");
                         return;
                     }
                     for (Ticket t : freePlaces) {
                         if (t.getPlaceNumber() == num) {
                             place = num;
                             ticketId = t.getId();
+                            user.log("Выбран билет №" + ticketId + "(место №" + place + ")");
                             break;
                         }
                     }
@@ -174,9 +180,10 @@ public class MenuController implements Controller {
         }
     }
 
-    void viewUserTickets(String user) {
+    void viewUserTickets(User user) {
+        user.log("Открыто меню просмотра своих билетов и их возврата");
         System.out.println("Ваши купленные билеты:");
-        List<Ticket> list = sf.ticketService.getUserTickets(user);
+        List<Ticket> list = sf.ticketService.getUserTickets(user.getLogin());
         System.out.println(list);
         System.out.println("Для возврата одного из указанных билетов введите номер билета," +
                 "для возврата в предыдущее меню введите 0:");
@@ -187,11 +194,13 @@ public class MenuController implements Controller {
             try {
                 int num = sc.nextInt();
                 if (num == 0) {
+                    user.log("Закрыто меню просмотра своих билетов без возврата");
                     return;
                 }
                 for (Ticket t : list) {
                     if (t.getId() == num) {
                         choice = num;
+                        user.log("Выбран билет №" + choice + " для возврата");
                         break;
                     }
                 }
@@ -214,6 +223,9 @@ public class MenuController implements Controller {
     public void managerMenu(User user) {
         Scanner sc = new Scanner(System.in);
         System.out.println("Менеджер " + user.getLogin() + ", добро пожаловть!\n");
+        user.setLogger();
+        user.log("Менеджер " + user.getLogin() + " вошел в приложение\nДата и время входа: " + LocalDateTime.now());
+        user.log("Открыто главное меню менеджера");
         int n = 1;
         while (n != 0) {
             System.out.println("\nВведите:\n" +
@@ -222,23 +234,25 @@ public class MenuController implements Controller {
                     "3 - для покупки билета пользователю,\n" +
                     "4 - для возврата билета пользователя,\n" +
                     "0 - для выхода из учетной записи.");
-
             String choice = sc.next();
             switch (choice) {
-                case "1":
-                    movieCreateMenu(); // меню создания киносеанса
+                case "1":    // создание киносеанса и билетов на него
+                    movieCreateMenu(user);
                     break;
-                case "2":
-                    movieUpdateMenu();  // меню редактирования киносеансов
+                case "2":    // меню редактирования киносеансов
+                    movieUpdateMenu(user);
                     break;
-                case "3":
-                    userTicketBuyMenu();  // меню покупки билета пользователя
+                case "3":    // меню покупки билета пользователю
+                    userTicketBuyMenu(user);
                     break;
-                case "4":
-                    userTicketGetBackMenu();  // меню возврата билета пользователя
+                case "4":    // меню возврата билета пользователя
+                    userTicketGetBackMenu(user);
                     break;
                 case "0":
+                    user.log("Менеджер " + user.getLogin() + " вышел из учетной записи");
+                    User.logClose();
                     n = 0;
+                    break;
                 default:
                     System.out.println("Команда введена неверно! Пожалуйста, попробуйте еще раз!");
             }
@@ -246,13 +260,18 @@ public class MenuController implements Controller {
 
     }
 
-    void movieCreateMenu() {
+    void movieCreateMenu(User user) {
+        user.log("Открыто меню создания киносеанса");
         Scanner sc = new Scanner(System.in);
         String title = "";
         while (title.equals("")) {
             Scanner sc1 = new Scanner(System.in);
-            System.out.println("Введите название фильма:");
+            System.out.println("Введите название фильма, или 0 для выхода в предыдущее меню:");
             title = sc1.nextLine();
+            if (title.equals("0")) {
+                user.log("Закрыто меню создания киносеанса, без его создания");
+                return;
+            }
             if (title.trim().length() < 3) {
                 System.out.println("Название фильма должно содержать больше 3 символов,");
                 title = "";
@@ -294,22 +313,23 @@ public class MenuController implements Controller {
                 System.out.println("Количество билетов должно быть числом");
             }
         }
-        Movie movie = sf.movieService.movieCreate(new Movie(title, date[0], date[1], date[2], time[0], time[1]));
-        if (movie != null) {
+        Movie movie = null;
+        if (sf.movieService.movieCreate(new Movie(title, date[0], date[1], date[2], time[0], time[1]))) {
             System.out.println("Киносеанс создан");
+            movie = sf.movieService.getMovie(title, date[0], date[1], date[2], time[0], time[1]);
+            if (movie != null) {
+                user.log("Добавлен фильм " + title);
+                if (sf.ticketService.ticketsForMovieCreate(title, placeCapacity, ticketPrice, movie.getId())) {
+                    user.log("Добавлено " + placeCapacity + " билетов на фильм " + title);
+                    System.out.println("Билеты созданы");
+                } else System.out.println("Ошибка создания билетов");
+
+            }
         }
-
-
-        if (movie != null) {
-            if (sf.ticketService.ticketsForMovieCreate(title, placeCapacity, ticketPrice, movie.getId())) {
-                System.out.println("Билеты созданы");
-            } else System.out.println("Ошибка создания билетов");
-        }
-
-
     }
 
-    void movieUpdateMenu() {
+    void movieUpdateMenu(User user) {
+        user.log("Открыто меню редактирования киносеанса");
         System.out.println("Все будущие киносеансы: ");
         List<Movie> moviesList = sf.movieService.getNextMovies();
         System.out.println(moviesList.toString());
@@ -321,6 +341,7 @@ public class MenuController implements Controller {
             try {
                 int n = sc.nextInt();
                 if (n == 0) {
+                    user.log("Закрыто меню редактирования киносеанса, без редактирования");
                     return;
                 }
                 for (Movie m : moviesList
@@ -356,6 +377,7 @@ public class MenuController implements Controller {
                 }
                 if (sf.movieService.movieUpdate(movieId, new Movie(title, date[0], date[1], date[2], time[0], time[1]))) {
                     System.out.println("Киносеанс успешно изменен");
+                    user.log("Изменен киносеанс №" + movieId);
                 }
             } else {
                 System.out.println("Киносеанса с таким номером не существует, выберетие один из списка выше");
@@ -363,14 +385,20 @@ public class MenuController implements Controller {
         }
     }
 
-    void userTicketGetBackMenu() {
-        System.out.println("Введите логин пользователя, билет которого хотите вернуть, :");
-        int n = 0;
+    void userTicketGetBackMenu(User user) {
+        user.log("Открыто меню возврата билета пользователя");
+        System.out.println("Введите логин пользователя, билет которого хотите вернуть," +
+                " либо 0 для возврата в предыдущее меню:");
         Scanner sc = new Scanner(System.in);
         List<Ticket> list = null;
+        int n = 0;
+        String name = "";
         while (n == 0) {
-            String name = "";
             name = sc.next();
+            if (name.equals("0")) {
+                user.log("Закрыто меню возврата билета пользователя, без возврата");
+                return;
+            }
             list = sf.ticketService.getUserTickets(name);
             if (list.isEmpty()) {
                 System.out.println("Неверный логин пользователя, либо у данного пользователя нет купленных билетов");
@@ -379,7 +407,6 @@ public class MenuController implements Controller {
                 n++;
             }
         }
-
         System.out.println("Введите номер билета, который вы хотите вернуть:");
         int ticketId = -1;
         int num = 0;
@@ -402,32 +429,32 @@ public class MenuController implements Controller {
         }
         if (sf.ticketService.ticketReturn(ticketId)) {
             System.out.println("Билет №" + ticketId + " возвращен");
+            user.log("Возвращен билет №" + ticketId + " пользователя " + name);
         } else System.out.println("Ошибка возврата билета");
     }
 
-    void userTicketBuyMenu() {
+    void userTicketBuyMenu(User user) {
+        user.log("Открыто меню покупки билета пользователю");
         System.out.println("Введите логин пользователя, билет которому хотите купить," +
                 " для возврата в предыдущее меню введите 0:");
         Scanner sc = new Scanner(System.in);
         String name = "";
-
         while (true) {
             name = sc.next();
             if (name.equals("0")) {
+                user.log("Закрыто меню покупки билета пользователю, без покупки билета");
                 return;
             }
-            User user = sf.userService.userRead(name);
-            if (user == null) {
+            User usr = sf.userService.userRead(name);
+            if (usr == null) {
                 System.out.println("Неверный логин пользователя, такой пользователь не зарегистрирован," +
                         " попробуйте еще раз");
-            } else if (user.getAccess() != UserAccessLevel.USER) {
+            } else if (usr.getAccess() != UserAccessLevel.USER) {
                 System.out.println("Билеты можно покупать только пользователям, попробуйте еще раз");
             } else {
                 break;
-
             }
         }
-
         System.out.println("Введите номер билета, который вы хотите купить пользователю:");
         int ticketId = -1;
         while (ticketId == -1) {
@@ -442,6 +469,7 @@ public class MenuController implements Controller {
             }
             if (sf.ticketService.buyTicket(ticketId, name)) {
                 System.out.println("Вы купили билет: " + sf.ticketService.readTicket(ticketId));
+                user.log("Пользователю " + name + " куплен билет № " + ticketId);
             } else {
                 System.out.println("Ошибка покупки билета, попробуйте другой номер билета");
                 ticketId = -1;
@@ -453,6 +481,9 @@ public class MenuController implements Controller {
 
     @Override
     public void adminMenu(User user) {
+        user.setLogger();
+        user.log("Админ " + user.getLogin() + " вошел в приложение\nДата и время входа: " + LocalDateTime.now());
+        user.log("Открыто главное меню админа");
         System.out.println("Админ " + user.getLogin() + ", добро пожаловть!");
         int n = 1;
         while (n != 0) {
@@ -462,25 +493,25 @@ public class MenuController implements Controller {
                     "3 - для удаления киносеанса,\n" +
                     "4 - для редактирования киносеанса,\n" +
                     "0 - для выхода из учетой записи");
-
             Scanner sc = new Scanner(System.in);
-
             String choice = sc.next();
             switch (choice) {
-                case "1":
-                    userDeleteMenu();
+                case "1":   //меню удаления пользователя
+                    userDeleteMenu(user);
                     break;
-                case "2":
-                    userUpdateMenu();
+                case "2":   //меню редактирования пользователя
+                    userUpdateMenu(user);
                     break;
-                case "3":
-                    movieDeleteMenu();
+                case "3":   //меню удаления киносеанса
+                    movieDeleteMenu(user);
                     break;
-                case "4":
-                    movieUpdateMenu();
+                case "4":   //меню редактирования киносеанса
+                    movieUpdateMenu(user);
                     break;
                 case "0":
                     n = 0;
+                    user.log("Админ " + user.getLogin() + " вышел из учетной записи");
+                    User.logClose();
                     break;
                 default:
                     System.err.println("Команда введена неверно! Пожалуйста, попробуйте еще раз!");
@@ -489,8 +520,9 @@ public class MenuController implements Controller {
 
     }
 
-    private void movieDeleteMenu() {
-        System.out.println("Введите № удаляемого киносеанса, либо 0 для возврата в предыдущее меню");
+    private void movieDeleteMenu(User user) {
+        user.log("Открыто меню удаления киносеанса");
+        System.out.println("Введите № удаляемого киносеанса, либо 0 для возврата в предыдущее меню:");
         List<Movie> list = sf.movieService.getNextMovies();
         System.out.println("Все будущие киносеансы: ");
         System.out.println(list.toString());
@@ -499,8 +531,8 @@ public class MenuController implements Controller {
             Scanner sc1 = new Scanner(System.in);
             try {
                 int num = sc1.nextInt();
-
                 if (num == 0) {
+                    user.log("Закрыто меню удаления киносеанса, без удаления");
                     return;
                 }
                 for (Movie m : list) {
@@ -513,6 +545,7 @@ public class MenuController implements Controller {
                     if (sf.movieService.movieDelete(deleteNum)) {
                         sf.ticketService.deleteTicketsOnMovie(deleteNum);
                         System.out.println("Киносеанс №" + deleteNum + " удален");
+                        user.log("Удален киносеанс № " + deleteNum);
                     } else System.out.println("Ошибка удаления");
                 } else System.out.println("Киносеанса с таким немером нет в базе");
             } catch (InputMismatchException e) {
@@ -521,40 +554,61 @@ public class MenuController implements Controller {
         }
     }
 
-    private void userUpdateMenu() {
+    private void userUpdateMenu(User user) {
+        user.log("Открыто меню редактирования пользователя");
         Scanner sc = new Scanner(System.in);
-        System.out.println("Введите логин редактируемого пользователя");
+        System.out.println("Введите логин редактируемого пользователя, либо 0 для выхода в предыдущее меню:");
         String login = sc.next();
-        User user = sf.userService.userRead(login);
-
-        if (user == null) {
+        if (login.equals("0")) {
+            user.log("Закрыто меню редактирования пользователя, без редактирования");
+            return;
+        }
+        User usr = sf.userService.userRead(login);
+        if (usr == null) {
             System.out.println("Пользователь с таким логином не зарегистрирован");
-
-        } else if (user.getAccess() != UserAccessLevel.USER) {
+        } else if (usr.getAccess() != UserAccessLevel.USER) {
             System.out.println("Редактировать менеджера или админа нельзя");
-
         } else {
             System.out.println("Введите новый логин пользователя");
             String newLogin = sc.next();
             System.out.println("Введите новый пароль пользователя");
             String pass = sc.next();
-
             if (sf.userService.userUpdate(login, new User(newLogin, pass, UserAccessLevel.USER))) {
                 System.out.println("Пользователь " + login + " изменен");
+                user.log("Отредактирован пользователь " + login + " , заменен на " + newLogin);
+                if (sf.ticketService.changeTicketsUser(login,newLogin)){
+                    System.out.println("Имя покупателя в купленных билетах изменено на новое");
+                    user.log("Отредактировано имя пользователя в билетах на новое");
+
+                };
             }
 
         }
 
     }
 
-    private void userDeleteMenu() {
+    private void userDeleteMenu(User user) {
+        user.log("Открыто меню удаления пользователя");
         Scanner sc = new Scanner(System.in);
-        System.out.println("Введите логин удаляемого пользователя:");
+        System.out.println("Введите логин удаляемого пользователя, либо 0 для выхода в предыдущее меню:");
         String userLogin = sc.next();
+        if (userLogin.equals("0")) {
+            user.log("Закрыто меню удаления пользователя, без удаления");
+            return;
+        }
         User userDelete = sf.userService.userDelete(userLogin);
         if (userDelete != null) {
             System.out.println("Пользователь " + userDelete.getLogin() + " удален");
-        } else System.out.println("Пользователь с таким логином не зарегистрирован," +
-                " либо это менеджер или админ");
+            user.log("Удален пользователь " + userLogin);
+            List<Ticket> list = sf.ticketService.getUserTickets(userLogin);
+            if (list != null) {
+                for (Ticket t : list) {
+                    sf.ticketService.ticketReturn(t.getId());
+                }
+            }
+        } else {
+            System.out.println("Пользователь с таким логином не зарегистрирован," +
+                    " либо это менеджер или админ");
+        }
     }
 }

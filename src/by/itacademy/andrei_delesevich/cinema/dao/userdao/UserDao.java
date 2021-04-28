@@ -8,11 +8,11 @@ import java.util.List;
 public interface UserDao {
 
     User createUser(User user) throws UserDaoException;
-    User readUser(String name);
+    User readUser(String name) throws UserDaoException;
     boolean updateUser(String name, User newUser) throws UserDaoException;
-    boolean deleteUser(String name);
-    List<User> getAllUsers();
-    String getUserPass (String userLogin);
+    boolean deleteUser(String name) throws UserDaoException;
+    List<User> getAllUsers() throws UserDaoException;
+    String getUserPass (String userLogin) throws UserDaoException;
 
 
 }

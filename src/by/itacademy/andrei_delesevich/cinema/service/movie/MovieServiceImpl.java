@@ -3,6 +3,7 @@ package by.itacademy.andrei_delesevich.cinema.service.movie;
 import by.itacademy.andrei_delesevich.cinema.dao.moviedao.MovieDao;
 import by.itacademy.andrei_delesevich.cinema.exception.MovieDaoException;
 import by.itacademy.andrei_delesevich.cinema.model.movie.Movie;
+import by.itacademy.andrei_delesevich.cinema.model.user.User;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -23,12 +24,13 @@ public class MovieServiceImpl implements MovieService {
             list = md.getAllMovies();
         } catch (MovieDaoException e) {
             System.err.println("Ошибка получения списка фильмов");
+            User.log(e);
         }
-
-        list = list.stream()
-                .filter(n -> n.getTimestamp().after(Timestamp.from(Instant.now())))
-                .collect(Collectors.toList());
-
+        if (list!=null) {
+            list = list.stream()
+                    .filter(n -> n.getTimestamp().after(Timestamp.from(Instant.now())))
+                    .collect(Collectors.toList());
+        }
         return list;
     }
 
@@ -39,6 +41,7 @@ public class MovieServiceImpl implements MovieService {
             return true;
         } catch (MovieDaoException m) {
             System.out.println(m.getMessage());
+            User.log(m);
             return false;
         }
     }
@@ -50,18 +53,19 @@ public class MovieServiceImpl implements MovieService {
 
         } catch (MovieDaoException e) {
             System.out.println(e.getMessage());
+            User.log(e);
             return false;
         }
     }
 
     @Override
-    public Movie movieCreate(Movie movie) {
+    public boolean movieCreate(Movie movie) {
         try {
-            md.createMovie(movie);
-            return movie;
+            return md.createMovie(movie);
         } catch (MovieDaoException e) {
             System.out.println(e.getMessage());
-            return null;
+            User.log(e);
+            return false;
         }
     }
 
@@ -73,6 +77,7 @@ public class MovieServiceImpl implements MovieService {
             return movie;
         }catch (MovieDaoException  | IllegalArgumentException e){
             System.out.println(e.getMessage());
+            User.log(e);
             return null;
         }
     }

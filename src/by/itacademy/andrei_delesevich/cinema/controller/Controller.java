@@ -7,7 +7,4 @@ public interface Controller {
     public void userMenu(User user);
     public void managerMenu(User user);
     public void adminMenu(User user);
-
-
-
 }
